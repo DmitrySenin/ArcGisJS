@@ -1,7 +1,7 @@
 ;(function() {
-	require(['esri/Map', 'esri/views/MapView', 'dojo/domReady!'], MapBuilder);
+	require(['esri/Map', 'esri/views/MapView', 'esri/tasks/Locator', 'dojo/domReady!'], MapBuilder);
 
-  function MapBuilder(Map, MapView) {
+  function MapBuilder(Map, MapView, Locator) {
 
     var map = new Map({
       basemap: "streets"
@@ -16,12 +16,24 @@
 
     var coordinatesElement = document.getElementById('coordinates');
 
+    var locator = new Locator({
+      url: "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer"
+    });
+
     view.on('click', function(event) {
-      // Get the coordinates of the click on the view
       var lat = event.mapPoint.latitude.toFixed(3);
       var lon = event.mapPoint.longitude.toFixed(3);
 
-      coordinatesElement.innerText = 'You clicked at: ' + coordinatesPresentation(lon, lat);
+      view.popup.open({
+        location: event.mapPoint,
+        title: 'Coordinates: ' + coordinatesPresentation(lon, lat)
+      });
+
+      locator.locationToAddress(event.mapPoint).then(function(response) {
+         view.popup.content = response.address.Match_addr;
+      }).otherwise(function(err) {
+         view.popup.content = "No address was found for this location";
+      });
     });
   }
 
