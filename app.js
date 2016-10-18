@@ -1,14 +1,16 @@
 ;(function() {
   var configuration = {};
 
-	require(['esri/config', 'esri/Map', 'esri/views/SceneView', 'esri/tasks/Locator', 'esri/widgets/Search', 'esri/layers/ElevationLayer', 'dojo/domReady!'], MapBuilder);
+	require(['esri/config', 'esri/Map', 'esri/views/SceneView', 'esri/tasks/Locator', 'esri/widgets/Search', 'esri/layers/ElevationLayer', 'esri/layers/OpenStreetMapLayer', 'dojo/domReady!'], MapBuilder);
 
-  function MapBuilder(esriConfig, Map, MapView, Locator, SearchWidget, ElevationLayer) {
+  function MapBuilder(esriConfig, Map, MapView, Locator, SearchWidget, ElevationLayer, OpenStreetMapLayer) {
     configureMap(Map);
     configureMapView(MapView, configuration);
     configureSearch(SearchWidget, configuration);
     configurePopup(Locator, configuration);
     configureElevationLayer(ElevationLayer, configuration);
+    configureOpenStreetMapLayer(OpenStreetMapLayer, configuration, esriConfig);
+    configureLayerSwitch(configuration);
   }
 
   function configureMap(Map) {
@@ -67,10 +69,38 @@
   }
 
   function configureElevationLayer(ElevationLayer, configuration) {
-    var elevationLayer = new ElevationLayer({
-      url: 'https://sampleserver6.arcgisonline.com/arcgis/rest/services/OsoLandslide/OsoLandslide_After_3DTerrain/ImageServer'
+    configuration.elevationLayer = new ElevationLayer({
+      url: 'https://sampleserver6.arcgisonline.com/arcgis/rest/services/OsoLandslide/OsoLandslide_After_3DTerrain/ImageServer',
+      visible: false
     });
-    configuration.map.ground.layers.add(elevationLayer);
+    configuration.map.ground.layers.add(configuration.elevationLayer);
+  }
+
+  function configureOpenStreetMapLayer(OpenStreetMapLayer, configuration, esriConfig) {
+    esriConfig.request.corsEnabledServers.push('a.tile.openstreetmap.org', 'b.tile.openstreetmap.org', 'c.tile.openstreetmap.org');
+    configuration.osmLayer = new OpenStreetMapLayer({
+      visible: true
+    });
+    configuration.map.add(configuration.osmLayer);
+  }
+
+  function configureLayerSwitch(configuration) {
+    var layers = document.getElementsByName("layer");
+    
+    for(var i = 0; i < layers.length; i++) {
+      layers[i].onchange = function (event) {
+        switch(event.target.value) {
+          case 'Elevation': 
+            configuration.elevationLayer.visible = true;
+            configuration.osmLayer.visible = false;
+            break;
+
+          default:
+            configuration.elevationLayer.visible = false; 
+            configuration.osmLayer.visible = true;
+        }
+      }
+    }
   }
 
   function coordinatesPresentation(lon, lat) {
