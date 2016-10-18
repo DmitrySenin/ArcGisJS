@@ -1,7 +1,7 @@
 ;(function() {
-	require(['esri/Map', 'esri/views/MapView', 'esri/tasks/Locator', 'dojo/domReady!'], MapBuilder);
+	require(['esri/Map', 'esri/views/MapView', 'esri/tasks/Locator', 'esri/widgets/Search', 'dojo/domReady!'], MapBuilder);
 
-  function MapBuilder(Map, MapView, Locator) {
+  function MapBuilder(Map, MapView, Locator, Search) {
 
     var map = new Map({
       basemap: "streets"
@@ -12,6 +12,16 @@
       map: map,
       zoom: 4,
       center: [15, 65]
+    });
+
+    var searchWidget = new Search({
+      view: view
+    });
+    searchWidget.startup();
+
+    view.ui.add(searchWidget, {
+      position: 'top-left',
+      index: 0
     });
 
     var coordinatesElement = document.getElementById('coordinates');
