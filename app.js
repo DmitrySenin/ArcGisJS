@@ -1,18 +1,20 @@
 ;(function() {
   var configuration = {};
 
-	require(['esri/Map', 'esri/views/MapView', 'esri/tasks/Locator', 'esri/widgets/Search', 'dojo/domReady!'], MapBuilder);
+	require(['esri/config', 'esri/Map', 'esri/views/SceneView', 'esri/tasks/Locator', 'esri/widgets/Search', 'esri/layers/ElevationLayer', 'dojo/domReady!'], MapBuilder);
 
-  function MapBuilder(Map, MapView, Locator, SearchWidget) {
+  function MapBuilder(esriConfig, Map, MapView, Locator, SearchWidget, ElevationLayer) {
     configureMap(Map);
     configureMapView(MapView, configuration);
     configureSearch(SearchWidget, configuration);
     configurePopup(Locator, configuration);
+    configureElevationLayer(ElevationLayer, configuration);
   }
 
   function configureMap(Map) {
     configuration.map = new Map({
-      basemap: "streets"
+      basemap: 'topo',
+      ground: 'world-elevation'
     }); 
   }
 
@@ -20,8 +22,11 @@
     configuration.mapView = new MapView({
       container: 'mapContainer',
       map: configuration.map,
-      zoom: 4,
-      center: [15, 65]
+      camera: {
+        position: [-121.83, 48.279, 1346],
+        heading: 300,
+        tilt: 60
+      }
     });
   }
 
@@ -59,6 +64,13 @@
          configuration.mapView.popup.content = "No address was found for this location";
       });
     });
+  }
+
+  function configureElevationLayer(ElevationLayer, configuration) {
+    var elevationLayer = new ElevationLayer({
+      url: 'https://sampleserver6.arcgisonline.com/arcgis/rest/services/OsoLandslide/OsoLandslide_After_3DTerrain/ImageServer'
+    });
+    configuration.map.ground.layers.add(elevationLayer);
   }
 
   function coordinatesPresentation(lon, lat) {
